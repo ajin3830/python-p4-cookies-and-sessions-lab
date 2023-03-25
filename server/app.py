@@ -22,13 +22,31 @@ def clear_session():
 
 @app.route('/articles')
 def index_articles():
-
-    pass
+    articles = Article.query.all()
+    return make_response([article.to_dict() for article in articles], 200)
 
 @app.route('/articles/<int:id>')
 def show_article(id):
+    # This line creates a new entry in a user's session, 
+    # which is a way of storing data for each user 
+    # who visits the website. If the user already 
+    # has a session with a page_views key, 
+    # its value is retrieved. Otherwise, the value is set to 0.
+    session['page_views'] = session.get('page_views') or 0
+    # increments the value of page_views for the current user's session by 1.
+    session['page_views'] += 1
 
-    pass
+    if session['page_views'] <= 3:
+        article = Article.query.filter_by(id=id).first()
+        return make_response(article.to_dict(), 200)
+    return make_response ({'message': 'Maximum pageview limit reached'}, 401)
+    # 401 request not authorized
+
+    # make_response is optional, it makes code look cleaner 
+    # and easier to replicate (even automate!) in other views.
+    # if session['page_views'] <= 3:
+    #     return Article.query.filter(Article.id == id).first().to_dict(), 200
+    # return {'message': 'Maximum pageview limit reached'}, 401
 
 if __name__ == '__main__':
     app.run(port=5555)
